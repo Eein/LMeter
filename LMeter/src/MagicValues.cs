@@ -16,10 +16,8 @@ public static class MagicValues
         "https://github.com/joshua-software-dev/LMeter";
     public const string PatchedCryptographyDllUrl =
         "https://cdn.discordapp.com/attachments/1012241909403615313/1113368719834497104/System.Security.Cryptography.dll";
-    public const string TotallyNotCefDownloadUrl =
-        "https://github.com/joshua-software-dev/TotallyNotCef/releases/latest/download/TotallyNotCef.zip";
     public const string TotallyNotCefUpdateCheckUrl =
-        "https://api.github.com/repos/joshua-software-dev/TotallyNotCef/tags";
+        "https://gitlab.com/api/v4/projects/50992666/releases/";
     public static readonly string DllInstallLocation =
         Path.GetFullPath
         (

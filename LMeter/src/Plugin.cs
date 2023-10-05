@@ -1,19 +1,14 @@
-using Dalamud.Data;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
 using Dalamud.Interface;
-using Dalamud.Logging;
+using Dalamud.Interface.Internal;
 using Dalamud.Plugin;
-using ImGuiScene;
+using Dalamud.Plugin.Services;
 using LMeter.Act;
 using LMeter.Config;
 using LMeter.Helpers;
 using LMeter.Meter;
+using System;
 using System.IO;
 using System.Reflection;
-using System;
 
 
 namespace LMeter;
@@ -26,19 +21,22 @@ public class Plugin : IDalamudPlugin
     public const string ConfigFileName = "LMeter.json";
     public static string ConfigFilePath { get; private set; } = string.Empty;
     public static string? GitHash { get; private set; }
-    public static TextureWrap? IconTexture { get; private set; }
+    public static IDalamudTextureWrap? IconTexture { get; private set; }
     public string Name => "LMeter";
     public static string? Version { get; private set; }
 
     public Plugin(
-        ClientState clientState,
-        CommandManager commandManager,
-        Condition condition,
+        IClientState clientState,
+        ICommandManager commandManager,
+        ICondition condition,
         DalamudPluginInterface pluginInterface,
-        DataManager dataManager,
-        ChatGui chatGui
+        IDataManager dataManager,
+        IChatGui chatGui,
+        IPluginLog pluginLog
     )
     {
+        LMeterLogger.Logger = pluginLog;
+
         LoadVersion();
         Plugin.ConfigFileDir = pluginInterface.GetPluginConfigDirectory();
         Plugin.ConfigFilePath = Path.Combine(pluginInterface.GetPluginConfigDirectory(), Plugin.ConfigFileName);
@@ -88,7 +86,7 @@ public class Plugin : IDalamudPlugin
         config.FirstLoad = false;
     }
 
-    private static TextureWrap? LoadIconTexture(UiBuilder uiBuilder)
+    private static IDalamudTextureWrap? LoadIconTexture(UiBuilder uiBuilder)
     {
         var pluginPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         if (string.IsNullOrEmpty(pluginPath)) return null;
@@ -102,7 +100,7 @@ public class Plugin : IDalamudPlugin
         }
         catch (Exception ex)
         {
-            PluginLog.Warning($"Failed to load LMeter Icon {ex}");
+            LMeterLogger.Logger?.Warning($"Failed to load LMeter Icon {ex}");
         }
 
         return null;
@@ -122,7 +120,7 @@ public class Plugin : IDalamudPlugin
             }
             catch (Exception ex)
             {
-                PluginLog.Warning($"Error loading changelog: {ex}");
+                LMeterLogger.Logger?.Warning($"Error loading changelog: {ex}");
             }
         }
 

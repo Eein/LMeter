@@ -1,4 +1,3 @@
-using Dalamud.Logging;
 using ImGuiNET;
 using LMeter.Config;
 using LMeter.Helpers;
@@ -63,7 +62,7 @@ public class CactbotRaidbossWindows
                             drawList,
                             state.Alarm,
                             textCenteredPos,
-                            4278190335, // red
+                            0xFF0000FF, // red
                             config.RaidbossAlarmTextOutlineThickness > 0,
                             thickness: (int) config.RaidbossAlarmTextOutlineThickness
                         );
@@ -86,7 +85,7 @@ public class CactbotRaidbossWindows
                             drawList,
                             state.Alert,
                             textCenteredPos,
-                            4278255615, // yellow
+                            0xFF00FFFF, // yellow
                             config.RaidbossAlertsTextOutlineThickness > 0,
                             thickness: (int) config.RaidbossAlertsTextOutlineThickness
                         );
@@ -109,7 +108,7 @@ public class CactbotRaidbossWindows
                             drawList,
                             state.Info,
                             textCenteredPos,
-                            4278255360, // green
+                            0xFF00FF00, // green
                             config.RaidbossInfoTextOutlineThickness > 0,
                             thickness: (int) config.RaidbossInfoTextOutlineThickness
                         );
@@ -213,7 +212,10 @@ public class CactbotRaidbossWindows
                         !state.Timeline.IsEmpty
                     )
                     {
-                        PluginLog.Log("Lost connection to TotallyNotCef, clearing lingering timeline events...");
+                        LMeterLogger.Logger?.Info
+                        (
+                            "Lost connection to TotallyNotCef, clearing lingering timeline events..."
+                        );
                         // Ensure lingering timers aren't left rendering.
                         state.Timeline.Clear();
                     }

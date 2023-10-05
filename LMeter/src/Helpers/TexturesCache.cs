@@ -1,17 +1,16 @@
-using Dalamud.Data;
 using Dalamud.Interface;
-using Dalamud.Logging;
-using Dalamud.Plugin.Ipc;
+using Dalamud.Interface.Internal;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 using Dalamud.Utility;
-using ImGuiScene;
 using Lumina.Data.Files;
 using Lumina.Data.Parsing.Tex;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System;
 using static Lumina.Data.Files.TexFile;
 
 
@@ -19,19 +18,19 @@ namespace LMeter.Helpers;
 
 public class TexturesCache : IDisposable
 {
-    private readonly Dictionary<string, Tuple<TextureWrap, float>> _textureCache = new ();
+    private readonly Dictionary<string, Tuple<IDalamudTextureWrap, float>> _textureCache = new ();
     private readonly ICallGateSubscriber<string, string> _penumbraPathResolver;
-    private readonly DataManager _dataManager;
+    private readonly IDataManager _dataManager;
     private readonly UiBuilder _uiBuilder;
 
-    public TexturesCache(DataManager dataManager, DalamudPluginInterface pluginInterface)
+    public TexturesCache(IDataManager dataManager, DalamudPluginInterface pluginInterface)
     {
         _penumbraPathResolver = pluginInterface.GetIpcSubscriber<string, string>("Penumbra.ResolveDefaultPath");
         _dataManager = dataManager;
         _uiBuilder = pluginInterface.UiBuilder;
     }
 
-    public TextureWrap? GetTextureFromIconId
+    public IDalamudTextureWrap? GetTextureFromIconId
     (
         uint iconId,
         uint stackCount = 0,
@@ -52,11 +51,11 @@ public class TexturesCache : IDisposable
         var newTexture = this.LoadTexture(iconId + stackCount, hdIcon, greyScale, opacity);
         if (newTexture == null) return null;
 
-        _textureCache.Add(key, new Tuple<TextureWrap, float>(newTexture, opacity));
+        _textureCache.Add(key, new Tuple<IDalamudTextureWrap, float>(newTexture, opacity));
         return newTexture;
     }
 
-    private TextureWrap? LoadTexture(uint id, bool hdIcon, bool greyScale, float opacity = 1f)
+    private IDalamudTextureWrap? LoadTexture(uint id, bool hdIcon, bool greyScale, float opacity = 1f)
     {
         var path = $"ui/icon/{id / 1000 * 1000:000000}/{id:000000}{(hdIcon ? "_hr1" : string.Empty)}.tex";
 
@@ -83,14 +82,14 @@ public class TexturesCache : IDisposable
         }
         catch (Exception ex)
         {
-            PluginLog.Warning(ex.ToString());
+            LMeterLogger.Logger?.Warning(ex.ToString());
         }
 
         return null;
     }
 
-    private TextureWrap? LoadPenumbraTexture(string path)
-    {            
+    private IDalamudTextureWrap? LoadPenumbraTexture(string path)
+    {
         try
         {
             var fileStream = new FileStream(path, FileMode.Open);
@@ -105,13 +104,14 @@ public class TexturesCache : IDisposable
             var rawImageData = reader.ReadBytes((int)fileStream.Length - headerSize);
             var imageData = new byte[header.Width * header.Height * 4];
 
-            if (!ProcessTexture(header.Format, rawImageData, imageData, header.Width, header.Height)) return null;
+            if (!ProcessTexture(header.Format, rawImageData, imageData, header.Width, header.Height))
+                return null;
 
             return _uiBuilder.LoadImageRaw(GetRgbaImageData(imageData), header.Width, header.Height, 4);
         }
         catch (Exception ex)
         {
-            PluginLog.Error($"Error loading texture: {path} {ex}");
+            LMeterLogger.Logger?.Error($"Error loading texture: {path} {ex}");
         }
 
         return null;
@@ -247,7 +247,7 @@ public class TexturesCache : IDisposable
         }
     }
 
-    private TextureWrap GetTextureWrap(TexFile tex, bool greyScale, float opacity)
+    private IDalamudTextureWrap GetTextureWrap(TexFile tex, bool greyScale, float opacity)
     {
         var bytes = tex.GetRgbaImageData();
 

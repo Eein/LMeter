@@ -1,4 +1,3 @@
-using Dalamud.Logging;
 using System;
 using System.Diagnostics;
 using System.Linq;
@@ -23,14 +22,17 @@ public static class ProcessLauncher
         process.EnableRaisingEvents = true;
         process.OutputDataReceived += new DataReceivedEventHandler(OnStdOutMessage);
         process.ErrorDataReceived += new DataReceivedEventHandler(OnStdErrMessage);
-        process.Exited += (_, _) => PluginLog.Log($"{exePath} exited with code {process?.ExitCode}");
+        process.Exited += (_, _) => LMeterLogger.Logger?.Info
+        (
+            $"{exePath} exited with code {process?.ExitCode}"
+        );
 
         process.StartInfo.FileName = exePath;
         process.StartInfo.Arguments =
             cactbotUrl + " " + httpPort + " " + (enableAudio ? 1 : 0) + " " + (bypassWebSocket ? 0 : 1);
 
-        PluginLog.Log($"EXE : {process.StartInfo.FileName}");
-        PluginLog.Log($"ARGS: {process.StartInfo.Arguments}");
+        LMeterLogger.Logger?.Info($"EXE : {process.StartInfo.FileName}");
+        LMeterLogger.Logger?.Info($"ARGS: {process.StartInfo.Arguments}");
 
         process.StartInfo.EnvironmentVariables["DOTNET_ROOT"] = Environment.GetEnvironmentVariable("DALAMUD_RUNTIME");
         process.StartInfo.EnvironmentVariables.Remove("DOTNET_BUNDLE_EXTRACT_BASE_DIR");
@@ -48,7 +50,7 @@ public static class ProcessLauncher
         catch (Exception e)
         {
             // Prefer not crashing to not starting this process
-            PluginLog.Log(e.ToString());
+            LMeterLogger.Logger?.Info(e.ToString());
         }
     }
 
@@ -58,12 +60,15 @@ public static class ProcessLauncher
         var linOldDllPath = WineChecker.WindowsFullPathToLinuxPath(winOldDllPath);
         if (linNewDllPath == null || linOldDllPath == null)
         {
-            PluginLog.LogError("Could not install DLL fix.");
+            LMeterLogger.Logger?.Error("Could not install DLL fix.");
         }
 
         var process = new Process();
         process.EnableRaisingEvents = true;
-        process.Exited += (_, _) => PluginLog.Log($"Process exited with code {process?.ExitCode}");
+        process.Exited += (_, _) => LMeterLogger.Logger?.Info
+        (
+            $"Process exited with code {process?.ExitCode}"
+        );
 
         process.StartInfo.FileName = "/usr/bin/env";
         process.StartInfo.Arguments = $"mv {linNewDllPath} {linOldDllPath}";
@@ -80,13 +85,13 @@ public static class ProcessLauncher
         catch (Exception e)
         {
             // Prefer not crashing to not starting this process
-            PluginLog.Log(e.ToString());
+            LMeterLogger.Logger?.Info(e.ToString());
         }
     }
 
     private static void OnStdErrMessage(object? sender, DataReceivedEventArgs e) =>
-        PluginLog.Debug($"STDERR: {e.Data}\n");
+        LMeterLogger.Logger?.Debug($"STDERR: {e.Data}\n");
 
     private static void OnStdOutMessage(object? sender, DataReceivedEventArgs e) =>
-        PluginLog.Verbose($"STDOUT: {e.Data}\n");
+        LMeterLogger.Logger?.Verbose($"STDOUT: {e.Data}\n");
 }

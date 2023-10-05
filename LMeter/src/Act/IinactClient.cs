@@ -1,15 +1,14 @@
-using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
-using Dalamud.Interface.Colors;
 using Dalamud.Interface;
-using Dalamud.Logging;
-using Dalamud.Plugin.Ipc;
+using Dalamud.Interface.Colors;
 using Dalamud.Plugin;
+using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 using ImGuiNET;
 using LMeter.Config;
 using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 
 
 namespace LMeter.Act;
@@ -28,7 +27,7 @@ public enum SubscriptionStatus
 
 public class IinactClient : ActEventParser, IActClient
 {
-    private readonly ChatGui _chatGui;
+    private readonly IChatGui _chatGui;
     private readonly ActConfig _config;
     private readonly DalamudPluginInterface _dpi;
     private readonly ICallGateProvider<JObject, bool> subscriptionReceiver;
@@ -44,7 +43,7 @@ public class IinactClient : ActEventParser, IActClient
     private SubscriptionStatus _status;
     private string? _lastErrorMessage;
 
-    public IinactClient(ChatGui chatGui, ActConfig config, DalamudPluginInterface dpi)
+    public IinactClient(IChatGui chatGui, ActConfig config, DalamudPluginInterface dpi)
     {
         _chatGui = chatGui;
         _config = config;
@@ -206,7 +205,7 @@ public class IinactClient : ActEventParser, IActClient
             Type = XivChatType.Echo
         };
 
-        _chatGui.PrintChat(message);
+        _chatGui.Print(message);
     }
 
     public void Clear()
@@ -222,7 +221,7 @@ public class IinactClient : ActEventParser, IActClient
                 Type = XivChatType.Echo
             };
 
-            _chatGui.PrintChat(message);
+            _chatGui.Print(message);
         }
     }
 
@@ -236,14 +235,14 @@ public class IinactClient : ActEventParser, IActClient
     {
         if (_status != SubscriptionStatus.NotConnected)
         {
-            PluginLog.Error("Cannot start, IINACTClient needs to be reset!");
+            LMeterLogger.Logger?.Error("Cannot start, IINACTClient needs to be reset!");
             return;
         }
         else if (_config.WaitForCharacterLogin)
         {
             if (!PluginManager.Instance?.ClientState.IsLoggedIn ?? true)
             {
-                PluginLog.Error("Cannot start, player is not logged in.");
+                LMeterLogger.Logger?.Error("Cannot start, player is not logged in.");
                 return;
             }
         }
@@ -258,36 +257,36 @@ public class IinactClient : ActEventParser, IActClient
         try
         {
             var connectSuccess = _dpi.GetIpcSubscriber<bool>(IinactListeningIpcEndpoint).InvokeFunc();
-            PluginLog.Verbose("Check if IINACT installed and running: " + connectSuccess);
+            LMeterLogger.Logger?.Verbose("Check if IINACT installed and running: " + connectSuccess);
             if (!connectSuccess) return false;
         }
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
             _lastErrorMessage = "IINACT server was not found or was not finished starting.";
-            PluginLog.Information(_lastErrorMessage);
+            LMeterLogger.Logger?.Info(_lastErrorMessage);
             _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
-            PluginLog.Verbose(_lastErrorMessage);
+            LMeterLogger.Logger?.Verbose(_lastErrorMessage);
             return false;
         }
         _status = SubscriptionStatus.Connected;
-        PluginLog.Information("Successfully discovered IINACT IPC endpoint");
+        LMeterLogger.Logger?.Info("Successfully discovered IINACT IPC endpoint");
 
         try
         {
             var subscribeSuccess = _dpi
                 .GetIpcSubscriber<string, bool>(IinactSubscribeIpcEndpoint)
                 .InvokeFunc(LMeterSubscriptionIpcEndpoint);
-            PluginLog.Verbose("Setup default empty IINACT subscription successfully: " + subscribeSuccess);
+            LMeterLogger.Logger?.Verbose("Setup default empty IINACT subscription successfully: " + subscribeSuccess);
             if (!subscribeSuccess) return false;
         }
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
             _lastErrorMessage = "Failed to setup IINACT subscription!";
-            PluginLog.Information(_lastErrorMessage);
+            LMeterLogger.Logger?.Info(_lastErrorMessage);
             _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
-            PluginLog.Verbose(_lastErrorMessage);
+            LMeterLogger.Logger?.Verbose(_lastErrorMessage);
             return false;
         }
         _status = SubscriptionStatus.Subscribing;
@@ -295,22 +294,22 @@ public class IinactClient : ActEventParser, IActClient
         try
         {
             // no way to check this, hoping blindly that it always works ¯\_(ツ)_/¯
-            PluginLog.Verbose($"""Updating subscription using endpoint: `{IinactProviderEditEndpoint}`""");
+            LMeterLogger.Logger?.Verbose($"""Updating subscription using endpoint: `{IinactProviderEditEndpoint}`""");
             _dpi
                 .GetIpcSubscriber<JObject, bool>(IinactProviderEditEndpoint)
                 .InvokeAction(SubscriptionMessageObject);
-            PluginLog.Verbose($"""Subscription update message sent""");
+            LMeterLogger.Logger?.Verbose($"""Subscription update message sent""");
             _status = SubscriptionStatus.Subscribed;
-            PluginLog.Information("Successfully subscribed to combat events from IINACT IPC");
+            LMeterLogger.Logger?.Info("Successfully subscribed to combat events from IINACT IPC");
             return true;
         }
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
             _lastErrorMessage = "Failed to finalize IINACT subscription!";
-            PluginLog.Information(_lastErrorMessage);
+            LMeterLogger.Logger?.Info(_lastErrorMessage);
             _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
-            PluginLog.Verbose(_lastErrorMessage);
+            LMeterLogger.Logger?.Verbose(_lastErrorMessage);
             return false;
         }
     }
@@ -324,7 +323,7 @@ public class IinactClient : ActEventParser, IActClient
         }
         catch (Exception ex)
         {
-            PluginLog.Verbose(ex.ToString());
+            LMeterLogger.Logger?.Verbose(ex.ToString());
             return false;
         }
     }
@@ -339,7 +338,7 @@ public class IinactClient : ActEventParser, IActClient
                 .GetIpcSubscriber<string, bool>(IinactUnsubscribeIpcEndpoint)
                 .InvokeFunc(LMeterSubscriptionIpcEndpoint);
 
-            PluginLog.Information(
+            LMeterLogger.Logger?.Info(
                 success
                     ? "Successfully unsubscribed from IINACT IPC"
                     : "Failed to unsubscribe from IINACT IPC"

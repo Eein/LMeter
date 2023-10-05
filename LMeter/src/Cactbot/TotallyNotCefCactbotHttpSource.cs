@@ -1,6 +1,5 @@
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
-using Dalamud.Logging;
 using LMeter.Runtime;
 using Newtonsoft.Json;
 using System;
@@ -40,6 +39,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     public int PollingRate { get; set; } = 1000; // milliseconds
 
     private IHtmlDocument? _parsedResponse = null;
+    private bool _browserNeedsReload;
 
     public TotallyNotCefCactbotHttpSource
     (
@@ -54,6 +54,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         CactbotState = new ();
         _browserInstallFolder = browserInstallFolder;
         _bypassWebSocket = bypassWebSocket;
+        _browserNeedsReload = false;
 
         if (_bypassWebSocket)
         {
@@ -171,7 +172,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             if (rawHtml == null) return;
             if (_enableVerboseResponseLogging)
             {
-                PluginLog.LogInformation(rawHtml);
+                LMeterLogger.Logger?.Info(rawHtml);
             }
 
             _parsedResponse = await _htmlParser.ParseDocumentAsync(rawHtml, _cancelTokenSource.Token);
@@ -186,18 +187,42 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         ) { }
     }
 
-    private class GithubTagResponse
+    private class GitlabLinksResponse
     {
         #pragma warning disable CS0649
         // JSON reflection is annoying
         [JsonProperty("name")]
-        public string? Name;
+        public string? FileName;
+
+        [JsonProperty("url")]
+        public string? Url;
+        #pragma warning restore CS0649
+    }
+
+    private class GitlabAssetsResponse
+    {
+        #pragma warning disable CS0649
+        // JSON reflection is annoying
+        [JsonProperty("links")]
+        public GitlabLinksResponse[]? Links;
+        #pragma warning restore CS0649
+    }
+
+    private class GitlabTagResponse
+    {
+        #pragma warning disable CS0649
+        // JSON reflection is annoying
+        [JsonProperty("tag_name")]
+        public string? TagName;
+
+        [JsonProperty("assets")]
+        public GitlabAssetsResponse? Assets;
         #pragma warning restore CS0649
     }
 
     private async Task<bool> IsTotallyNotCefUpToDate(string exePath)
     {
-        FileVersionInfo localVersion;
+        FileVersionInfo? localVersion;
         try
         {
             if (!exePath.EndsWith(".exe")) return false;
@@ -212,7 +237,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             return false;
         }
 
-        PluginLog.Debug($"TotallyNotCef Version: {localVersion.FileVersion}");
+        LMeterLogger.Logger?.Debug($"TotallyNotCef Version: {localVersion.FileVersion}");
 
         HttpResponseMessage response;
         try
@@ -223,7 +248,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
                 cancellationToken: _cancelTokenSource.Token
             );
 
-            // assume up to date, github hasn't responded correctly.
+            // assume up to date, gitlab hasn't responded correctly.
             if (!response.IsSuccessStatusCode) return true;
         }
         catch (Exception e) when
@@ -245,10 +270,10 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         // same here three.
         if (rawJson == null) return true;
 
-        GithubTagResponse[]? parsedJson;
+        GitlabTagResponse[]? parsedJson;
         try
         {
-            parsedJson = JsonConvert.DeserializeObject<GithubTagResponse[]>(rawJson);
+            parsedJson = JsonConvert.DeserializeObject<GitlabTagResponse[]>(rawJson);
             // same here four.
             if (parsedJson == null || parsedJson.Length < 1) return true;
         }
@@ -258,10 +283,10 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             return true;
         }
 
-        var latestVersion = parsedJson[0].Name?.Replace("v", string.Empty);
+        var latestVersion = parsedJson[0]?.TagName?.Replace("v", string.Empty);
         // same here six.
         if (latestVersion == null) return true;
-        PluginLog.Debug($"Latest Version: {latestVersion}");
+        LMeterLogger.Logger?.Debug($"Latest Version: {latestVersion}");
 
         return localVersion.FileVersion == latestVersion;
     }
@@ -288,23 +313,85 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     private async Task DownloadTotallyNotCef(string cefDirPath)
     {
         var extractDir = Path.GetFullPath(Path.Join(cefDirPath, ".."));
-        PluginLog.Log($"Extract Directory: {extractDir}");
+        LMeterLogger.Logger?.Info($"Extract Directory: {extractDir}");
         WebBrowserState = TotallyNotCefBrowserState.Downloading;
-        PluginLog.Log("Downloading TotallyNotCef...");
+        LMeterLogger.Logger?.Info("Downloading TotallyNotCef...");
+
+        HttpResponseMessage response;
         try
         {
-            PluginLog.Log(MagicValues.TotallyNotCefDownloadUrl);
-            using var response = await _httpClient.GetAsync
+            response = await _httpClient.GetAsync
             (
-                MagicValues.TotallyNotCefDownloadUrl,
+                MagicValues.TotallyNotCefUpdateCheckUrl,
                 cancellationToken: _cancelTokenSource.Token
             );
-            if (!response.IsSuccessStatusCode) return;
 
-            using var streamToReadFrom = await response.Content.ReadAsStreamAsync(_cancelTokenSource.Token);
+            // Failed to poll gitlab API, giving up here.
+            if (!response.IsSuccessStatusCode) return;
+        }
+        catch (Exception e) when
+        (
+            e is OperationCanceledException ||
+            e is TaskCanceledException ||
+            e is HttpRequestException ||
+            e is SocketException
+        )
+        {
+            // same here.
+            return;
+        }
+
+        // same here too.
+        if (response?.Content == null) return;
+
+        var rawJson = await response.Content.ReadAsStringAsync(_cancelTokenSource.Token);
+        // same here three.
+        if (rawJson == null) return;
+
+        GitlabTagResponse[]? parsedJson;
+        try
+        {
+            parsedJson = JsonConvert.DeserializeObject<GitlabTagResponse[]>(rawJson);
+            // same here four.
+            if (parsedJson == null || parsedJson.Length < 1) return;
+        }
+        catch (JsonSerializationException)
+        {
+            // same here five.
+            return;
+        }
+
+        var links = parsedJson[0]?.Assets?.Links;
+        // same here six.
+        if (links == null || links.Length < 1) return;
+
+        string? latest_link = null;
+        foreach (var link in links)
+        {
+            if (link?.FileName?.Contains("TotallyNotCef.zip") ?? false)
+            {
+                latest_link = link.Url;
+                break;
+            }
+        }
+
+        // same here seven.
+        if (latest_link == null) return;
+
+        try
+        {
+            LMeterLogger.Logger?.Info(latest_link);
+            using var download_response = await _httpClient.GetAsync
+            (
+                latest_link,
+                cancellationToken: _cancelTokenSource.Token
+            );
+            if (!download_response.IsSuccessStatusCode) return;
+
+            using var streamToReadFrom = await download_response.Content.ReadAsStreamAsync(_cancelTokenSource.Token);
             using var zip = new ZipArchive(streamToReadFrom);
             zip.ExtractToDirectory(extractDir);
-            PluginLog.Log("Finished extracting TotallyNotCef");
+            LMeterLogger.Logger?.Info("Finished extracting TotallyNotCef");
         }
         catch (Exception e) when
         (
@@ -332,17 +419,17 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         {
             if (!(await IsTotallyNotCefUpToDate(cefExePath)))
             {
-                PluginLog.Log("TotallyNotCef is out of date.");
+                LMeterLogger.Logger?.Info("TotallyNotCef is out of date.");
                 if (isDefaultInstallLocation)
                 {
-                    PluginLog.Log("Updating...");
+                    LMeterLogger.Logger?.Info("Updating...");
                     await DeleteTotallyNotCefInstall(_browserInstallFolder);
                     await DownloadTotallyNotCef(_browserInstallFolder);
                 }
             }
             else
             {
-                PluginLog.Log("TotallyNotCef is up to date.");
+                LMeterLogger.Logger?.Info("TotallyNotCef is up to date.");
             }
         }
         else if (isDefaultInstallLocation)
@@ -362,7 +449,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     {
         if (autoStartBackgroundWebBrowser)
         {
-            await StartTotallyNotCefProcess();
+            // await StartTotallyNotCefProcess();
         }
 
         LastHealthResponse = await CheckIfPortBelongsToTotallyNotCef();
@@ -379,6 +466,26 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
             {
                 if (PluginManager.Instance?.CactbotConfig?.EnableConnection ?? false)
                 {
+                    if (_browserNeedsReload)
+                    {
+                        try
+                        {
+                            _httpClient
+                                .GetAsync(_httpUrl + "/reload", cancellationToken: _cancelTokenSource.Token)
+                                .GetAwaiter()
+                                .GetResult();
+                        }
+                        catch (Exception e) when
+                        (
+                            e is OperationCanceledException ||
+                            e is TaskCanceledException ||
+                            e is HttpRequestException ||
+                            e is SocketException
+                        ) { }
+                        _browserNeedsReload = false;
+                        _parsedResponse = null;
+                    }
+
                     await GetCactbotHtml();
                 }
                 else
@@ -401,7 +508,11 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
 
                 await Task.Delay(PollingRate, _cancelTokenSource.Token);
             }
-            catch (Exception e) when (e is OperationCanceledException || e is TaskCanceledException)
+            catch (Exception e) when
+            (
+                e is OperationCanceledException ||
+                e is TaskCanceledException
+            )
             {
                 // Do not crash
             }
@@ -454,6 +565,11 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
         }
 
         WebBrowserState = TotallyNotCefBrowserState.NotStarted;
+    }
+
+    public void ReloadBrowser()
+    {
+        _browserNeedsReload = true;
     }
 
     public void Dispose()

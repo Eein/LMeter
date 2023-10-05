@@ -1,10 +1,9 @@
 using Dalamud.Interface;
-using Dalamud.Logging;
 using ImGuiNET;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System;
 
 
 namespace LMeter.Helpers
@@ -52,7 +51,7 @@ namespace LMeter.Helpers
         private string[] _fontList = new string[] { DalamudFontKey };
         private readonly UiBuilder _uiBuilder;
         public const string DalamudFontKey = "Dalamud Font";
-        public static readonly List<string> DefaultFontKeys = 
+        public static readonly List<string> DefaultFontKeys =
             new ()
             {
                 "Expressway_24",
@@ -60,11 +59,11 @@ namespace LMeter.Helpers
                 "Expressway_16"
             };
 
-        public static string DefaultBigFontKey => 
+        public static string DefaultBigFontKey =>
             DefaultFontKeys[0];
-        public static string DefaultMediumFontKey => 
+        public static string DefaultMediumFontKey =>
             DefaultFontKeys[1];
-        public static string DefaultSmallFontKey => 
+        public static string DefaultSmallFontKey =>
             DefaultFontKeys[2];
 
         public FontsManager(UiBuilder uiBuilder, IEnumerable<FontData> fonts)
@@ -99,8 +98,8 @@ namespace LMeter.Helpers
                 }
                 catch (Exception ex)
                 {
-                    PluginLog.Error($"Failed to load font from path [{fontPath}]!");
-                    PluginLog.Error(ex.ToString());
+                    LMeterLogger.Logger?.Error($"Failed to load font from path [{fontPath}]!");
+                    LMeterLogger.Logger?.Error(ex.ToString());
                 }
             }
 
@@ -114,7 +113,7 @@ namespace LMeter.Helpers
 
         public FontScope PushFont(string fontKey)
         {
-            if 
+            if
             (
                 string.IsNullOrEmpty(fontKey) ||
                 fontKey.Equals(DalamudFontKey) ||
@@ -182,15 +181,15 @@ namespace LMeter.Helpers
         }
 
         public static string GetFontKey(FontData font) =>
-            $"{font.Name}_{font.Size}" + 
+            $"{font.Name}_{font.Size}" +
             (
-                font.Chinese 
-                    ? "_cnjp" 
+                font.Chinese
+                    ? "_cnjp"
                     : string.Empty
-            ) + 
+            ) +
             (
-                font.Korean 
-                    ? "_kr" 
+                font.Korean
+                    ? "_kr"
                     : string.Empty
             );
 
@@ -207,7 +206,7 @@ namespace LMeter.Helpers
             }
             catch (Exception ex)
             {
-                PluginLog.Warning($"Failed to create User Font Directory {ex}");
+                LMeterLogger.Logger?.Warning($"Failed to create User Font Directory {ex}");
             }
 
             if (!Directory.Exists(userFontPath)) return;
@@ -238,7 +237,7 @@ namespace LMeter.Helpers
                 }
                 catch (Exception ex)
                 {
-                    PluginLog.Warning($"Failed to copy font {font} to User Font Directory: {ex}");
+                    LMeterLogger.Logger?.Warning($"Failed to copy font {font} to User Font Directory: {ex}");
                 }
             }
         }

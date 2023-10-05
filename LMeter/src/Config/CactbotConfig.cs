@@ -83,6 +83,12 @@ public class CactbotConfig : IConfigPage, IDisposable
         );
     }
 
+    public void ReloadBrowser()
+    {
+        this.Cactbot?.CactbotState.Clear();
+        this.Cactbot?.ReloadBrowser();
+    }
+
     private void DrawBrowserSettings(Vector2 windowSize)
     {
         using var browserScope = new DrawChildScope
@@ -128,30 +134,34 @@ public class CactbotConfig : IConfigPage, IDisposable
             case TotallyNotCefBrowserState.NotStarted:
             {
                 ImGui.Text(""); // Boxed X Mark
+                ImGui.PopFont();
                 break;
             }
             case TotallyNotCefBrowserState.Downloading:
             {
                 ImGui.Text(""); // Loading Spinner
+                ImGui.PopFont();
                 break;
             }
             case TotallyNotCefBrowserState.Starting:
             {
                 ImGui.Text(""); // Loading Spinner
+                ImGui.PopFont();
                 break;
             }
             case TotallyNotCefBrowserState.Running:
             {
                 ImGui.Text(""); // Boxed checkmark
+                ImGui.PopFont();
                 break;
             }
             default:
             {
+                ImGui.PopFont();
                 ImGui.Text("?");
                 break;
             }
         }
-        ImGui.PopFont();
         ImGui.SameLine();
         ImGui.Text(Cactbot?.WebBrowserState.ToString() ?? "null");
 

@@ -1,10 +1,9 @@
 using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Game.ClientState.Objects;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
+using System;
 using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
-using System;
 
 
 namespace LMeter.Helpers;
@@ -26,7 +25,7 @@ public static class Utils
             _ => position
         };
 
-    public static GameObject? FindTargetOfTarget(ObjectTable objectTable, GameObject? player, GameObject? target)
+    public static GameObject? FindTargetOfTarget(IObjectTable objectTable, GameObject? player, GameObject? target)
     {
         if (target == null) return null;
 
@@ -66,7 +65,7 @@ public static class Utils
             }
             catch (Exception e)
             {
-                PluginLog.Error("Error trying to open url: " + e.Message);
+                LMeterLogger.Logger?.Error("Error trying to open url: " + e.Message);
             }
         }
     }

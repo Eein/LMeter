@@ -14,7 +14,7 @@
         <AssemblyName>LMeter</AssemblyName>
         <AssemblyTitle>LMeter</AssemblyTitle>
         <Product>LMeter</Product>
-        <Copyright>Copyright © Lichie 2021</Copyright>
+        <Copyright>Copyright © Lichie 2023</Copyright>
         <AssemblyVersion>$(PluginVersion)</AssemblyVersion>
         <FileVersion>$(PluginVersion)</FileVersion>
         <InformationalVersion>$(PluginVersion)</InformationalVersion>
@@ -144,9 +144,6 @@
         <Reference Include="ImGui.NET">
             <Private>false</Private>
         </Reference>
-        <Reference Include="ImGuiScene">
-            <Private>false</Private>
-        </Reference>
         <Reference Include="Lumina">
             <Private>false</Private>
         </Reference>
@@ -161,7 +158,7 @@
     <!-- NuGet Packages -->
     <ItemGroup>
         <PackageReference Include="AngleSharp" Version="1.0.1" />
-        <PackageReference Include="DalamudPackager" Version="2.1.11" />
+        <PackageReference Include="DalamudPackager" Version="2.1.12" />
     </ItemGroup>
 
     <!-- Dalamud Packager Task-->

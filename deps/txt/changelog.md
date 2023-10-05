@@ -1,3 +1,11 @@
+# Version 0.2.1.0
+- Update for patch 6.5
+- Cactbot support in non-beta builds
+- Cactbot support is currently only possible when running on wine with the
+  linux native builds of TotallyNotCef. Sorry for the inconvenience, this will
+  hopefully be fixed by the next release
+- Add the Sylphstep gold saucer jumping puzzle to the gold saucer exclude zones
+
 # Version 0.2.0.19
 - Fix occasional text doubling in cactbot popups (alarms, alerts, info)
 

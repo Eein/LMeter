@@ -1,4 +1,3 @@
-using Dalamud.Logging;
 using LMeter.Helpers;
 using System;
 using System.Collections.Generic;
@@ -53,7 +52,7 @@ public class ActEventParser
         }
         catch (Exception ex)
         {
-            PluginLog.Verbose(ex.ToString());
+            LMeterLogger.Logger?.Verbose(ex.ToString());
             return false;
         }
 

@@ -1,5 +1,4 @@
 using Dalamud.Game.ClientState.Conditions;
-using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using Lumina.Excel.GeneratedSheets;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +20,7 @@ public static class CharacterState
         831, // The Manderville Tables | Mojang
         899, // The Falling City of Nym | Jump puzzles
         941, // The Battlehall | ???
+        1098, // Sylphstep | Jump puzzles
     };
 
     public static bool IsCharacterBusy() =>
@@ -57,10 +57,7 @@ public static class CharacterState
         var player = PluginManager.Instance.ClientState.LocalPlayer;
         if (player is null) return Job.UKN;
 
-        unsafe
-        {
-            return (Job) ((Character*) player.Address)->ClassJob;
-        }
+        return (Job) (player.ClassJob.GameData?.JobIndex ?? 0);
     }
 
     public static (ushort territoryId, string? territoryName) GetCharacterLocation()

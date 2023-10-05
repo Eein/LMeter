@@ -258,7 +258,8 @@ public class ActConfig : IConfigPage
                 this.LastCombatTime < DateTime.UtcNow - TimeSpan.FromSeconds(this.AutoEndDelay)
             )
             {
-                PluginManager.Instance.ActClient.Current.EndEncounter();
+                PluginManager.Instance.CactbotConfig?.ReloadBrowser();
+                PluginManager.Instance.ActClient?.Current?.EndEncounter();
                 this.LastCombatTime = null;
             }
         }

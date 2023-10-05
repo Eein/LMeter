@@ -1,18 +1,17 @@
-using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
-using Dalamud.Interface.Colors;
 using Dalamud.Interface;
-using Dalamud.Logging;
+using Dalamud.Interface.Colors;
+using Dalamud.Plugin.Services;
 using ImGuiNET;
 using LMeter.Config;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.WebSockets;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
-using System;
+using System.Threading.Tasks;
 
 
 namespace LMeter.Act;
@@ -35,14 +34,14 @@ public class ActWebSocketClient : ActEventParser, IActClient
     private ClientWebSocket _socket;
     private CancellationTokenSource _cancellationTokenSource;
     private Task? _receiveTask;
-    private readonly ChatGui _chatGui;
+    private readonly IChatGui _chatGui;
 
     private ConnectionStatus _status;
     private string? _lastErrorMessage;
 
     public const string SubscriptionMessage = """{"call":"subscribe","events":["CombatData"]}""";
 
-    public ActWebSocketClient(ChatGui chatGui, ActConfig config)
+    public ActWebSocketClient(IChatGui chatGui, ActConfig config)
     {
         _chatGui = chatGui;
         _config = config;
@@ -202,7 +201,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
             Type = XivChatType.Echo
         };
 
-        _chatGui.PrintChat(message);
+        _chatGui.Print(message);
     }
 
     public void Clear()
@@ -217,7 +216,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
                 Type = XivChatType.Echo
             };
 
-            _chatGui.PrintChat(message);
+            _chatGui.Print(message);
         }
     }
 
@@ -231,14 +230,14 @@ public class ActWebSocketClient : ActEventParser, IActClient
     {
         if (_status != ConnectionStatus.NotConnected)
         {
-            PluginLog.Error("Cannot start, ActWebSocketClient needs to be reset!");
+            LMeterLogger.Logger?.Error("Cannot start, ActWebSocketClient needs to be reset!");
             return;
         }
         else if (_config.WaitForCharacterLogin)
         {
             if (!PluginManager.Instance?.ClientState.IsLoggedIn ?? true)
             {
-                PluginLog.Error("Cannot start, player is not logged in.");
+                LMeterLogger.Logger?.Error("Cannot start, player is not logged in.");
                 return;
             }
         }
@@ -279,7 +278,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
         }
 
         _status = ConnectionStatus.Connected;
-        PluginLog.Information("Successfully established ACT WebSocket connection");
+        LMeterLogger.Logger?.Info("Successfully established ACT WebSocket connection");
 
         try
         {
@@ -301,7 +300,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
         }
 
         _status = ConnectionStatus.Subscribed;
-        PluginLog.Information("Successfully subscribed to combat events from ACT WebSocket");
+        LMeterLogger.Logger?.Info("Successfully subscribed to combat events from ACT WebSocket");
 
         await ReceiveMessages();
     }
@@ -334,7 +333,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
                 ms.Seek(0, SeekOrigin.Begin);
                 using var reader = new StreamReader(ms, Encoding.UTF8);
                 var data = await reader.ReadToEndAsync();
-                PluginLog.Verbose(data);
+                LMeterLogger.Logger?.Verbose(data);
                 if (string.IsNullOrEmpty(data)) continue;
 
                 try
@@ -383,7 +382,7 @@ public class ActWebSocketClient : ActEventParser, IActClient
 
             // TODO: Replace this whole thing with a ThreadPool version
             _receiveTask?.GetAwaiter().GetResult();
-            PluginLog.Information($"Closed ACT WebSocket connection");
+            LMeterLogger.Logger?.Info($"Closed ACT WebSocket connection");
         }
 
         _socket.Dispose();
@@ -400,8 +399,8 @@ public class ActWebSocketClient : ActEventParser, IActClient
 
     private void LogConnectionFailure(string error)
     {
-        PluginLog.Debug($"Failed to connect to ACT!");
-        PluginLog.Verbose(error);
+        LMeterLogger.Logger?.Debug($"Failed to connect to ACT!");
+        LMeterLogger.Logger?.Verbose(error);
     }
 
     public void Dispose()

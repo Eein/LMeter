@@ -1,14 +1,13 @@
 using Dalamud.Interface.Internal.Notifications;
-using Dalamud.Logging;
 using ImGuiNET;
 using LMeter.Config;
-using Newtonsoft.Json.Serialization;
 using Newtonsoft.Json;
-using System.Collections.Generic;
-using System.IO.Compression;
-using System.IO;
-using System.Text;
+using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
 
 
 namespace LMeter.Helpers;
@@ -29,7 +28,7 @@ public static class ConfigHelpers
 
         if (!string.IsNullOrEmpty(exportString))
         {
-            PluginLog.Log(exportString);
+            LMeterLogger.Logger?.Info(exportString);
             ImGui.SetClipboardText(exportString);
             DrawHelpers.DrawNotification("Export string copied to clipboard.");
         }
@@ -55,7 +54,7 @@ public static class ConfigHelpers
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex.ToString());
+            LMeterLogger.Logger?.Error(ex.ToString());
         }
 
         return null;
@@ -76,7 +75,7 @@ public static class ConfigHelpers
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex.ToString());
+            LMeterLogger.Logger?.Error(ex.ToString());
         }
 
         return default;
@@ -95,7 +94,7 @@ public static class ConfigHelpers
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex.ToString());
+            LMeterLogger.Logger?.Error(ex.ToString());
 
             var backupPath = $"{path}.bak";
             if (File.Exists(path))
@@ -103,11 +102,11 @@ public static class ConfigHelpers
                 try
                 {
                     File.Copy(path, backupPath);
-                    PluginLog.Information($"Backed up LMeter config to '{backupPath}'.");
+                    LMeterLogger.Logger?.Info($"Backed up LMeter config to '{backupPath}'.");
                 }
                 catch
                 {
-                    PluginLog.Warning($"Unable to back up LMeter config.");
+                    LMeterLogger.Logger?.Warning($"Unable to back up LMeter config.");
                 }
             }
         }
@@ -119,13 +118,13 @@ public static class ConfigHelpers
     {
         try
         {
-            PluginLog.Verbose($"Writing out config file: {Plugin.ConfigFilePath}");
+            LMeterLogger.Logger?.Verbose($"Writing out config file: {Plugin.ConfigFilePath}");
             var jsonString = JsonConvert.SerializeObject(config, Formatting.Indented, _serializerSettings);
             File.WriteAllText(Plugin.ConfigFilePath, jsonString);
         }
         catch (Exception ex)
         {
-            PluginLog.Error(ex.ToString());
+            LMeterLogger.Logger?.Error(ex.ToString());
         }
     }
 }

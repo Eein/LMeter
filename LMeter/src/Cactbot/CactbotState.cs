@@ -48,7 +48,7 @@ public class CactbotState
             Message = $"RAIDBOSS ALARM: {Alarm}",
             Type = XivChatType.ErrorMessage
         };
-        PluginManager.Instance.ChatGui.PrintChat(message);
+        PluginManager.Instance.ChatGui.Print(message);
     }
 
     private void OnAlertStateChange(object? sender, EventArgs eventArgs)
@@ -61,7 +61,7 @@ public class CactbotState
             Name = "RAIDBOSS ALERT",
             Type = XivChatType.Yell
         };
-        PluginManager.Instance.ChatGui.PrintChat(message);
+        PluginManager.Instance.ChatGui.Print(message);
     }
 
     private void OnInfoStateChange(object? sender, EventArgs eventArgs)
@@ -74,7 +74,7 @@ public class CactbotState
             Name = "RAIDBOSS INFO",
             Type = XivChatType.NPCDialogueAnnouncements
         };
-        PluginManager.Instance.ChatGui.PrintChat(message);
+        PluginManager.Instance.ChatGui.Print(message);
     }
 
     private void UpdateTimeline(IHtmlDocument html)
@@ -97,7 +97,10 @@ public class CactbotState
                 Timeline[parsedContainer.ContainerId] = parsedContainer;
             }
 
-            currentIds[parsedContainer.ContainerId] = true;
+            if (!(container.ClassName?.Contains("removed") ?? false))
+            {
+                currentIds[parsedContainer.ContainerId] = true;
+            }
         }
 
         // TODO: Find a way to remove multiple keys atomically. This works, but
@@ -136,6 +139,14 @@ public class CactbotState
         }
 
         return holder.TextContent.Trim();
+    }
+
+    public void Clear()
+    {
+        Alarm = null;
+        Alert = null;
+        Info = null;
+        Timeline.Clear();
     }
 
     public void UpdateState(IHtmlDocument? html)

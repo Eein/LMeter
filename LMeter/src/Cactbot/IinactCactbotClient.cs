@@ -1,7 +1,6 @@
-using Dalamud.Game.ClientState;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Services;
 using LMeter.Act;
 using LMeter.Helpers;
 using Newtonsoft.Json;
@@ -20,7 +19,7 @@ namespace LMeter.Cactbot;
 public class IinactCactbotClient : IActClient
 {
     private readonly bool _bypassWebSocket;
-    private readonly ClientState _clientState;
+    private readonly IClientState _clientState;
     private readonly CancellationTokenSource _cancelTokenSource;
     private readonly DalamudPluginInterface _dpi;
     private readonly HttpClient _httpClient;
@@ -68,7 +67,7 @@ public class IinactCactbotClient : IActClient
     public IinactCactbotClient
     (
         bool bypassWebSocket,
-        ClientState clientState,
+        IClientState clientState,
         CancellationTokenSource cts,
         DalamudPluginInterface dpi,
         HttpClient httpClient,
@@ -93,7 +92,7 @@ public class IinactCactbotClient : IActClient
         catch { }
     }
 
-    private void HandleOnLogin(object? sender, EventArgs args)
+    private void HandleOnLogin()
     {
         if (_bypassWebSocket && !_fakeHandshakeComplete)
         {
@@ -169,36 +168,36 @@ public class IinactCactbotClient : IActClient
         try
         {
             var connectSuccess = _dpi.GetIpcSubscriber<bool>(IinactListeningIpcEndpoint).InvokeFunc();
-            PluginLog.Verbose("CACTBOT | Check if IINACT installed and running: " + connectSuccess);
+            LMeterLogger.Logger?.Verbose("CACTBOT | Check if IINACT installed and running: " + connectSuccess);
             if (!connectSuccess) return false;
         }
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
             _lastErrorMessage = "CACTBOT | IINACT server was not found or was not finished starting.";
-            PluginLog.Information(_lastErrorMessage);
+            LMeterLogger.Logger?.Info(_lastErrorMessage);
             _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
-            PluginLog.Verbose(_lastErrorMessage);
+            LMeterLogger.Logger?.Verbose(_lastErrorMessage);
             return false;
         }
         _status = SubscriptionStatus.Connected;
-        PluginLog.Information("CACTBOT | Successfully discovered IINACT IPC endpoint");
+        LMeterLogger.Logger?.Info("CACTBOT | Successfully discovered IINACT IPC endpoint");
 
         try
         {
             var subscribeSuccess = _dpi
                 .GetIpcSubscriber<string, bool>(IinactSubscribeIpcEndpoint)
                 .InvokeFunc(LMeterCactbotSubscriptionIpcEndpoint);
-            PluginLog.Verbose("CACTBOT | Setup default empty IINACT subscription successfully: " + subscribeSuccess);
+            LMeterLogger.Logger?.Verbose("CACTBOT | Setup default empty IINACT subscription successfully: " + subscribeSuccess);
             if (!subscribeSuccess) return false;
         }
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
             _lastErrorMessage = "CACTBOT | Failed to setup IINACT subscription!";
-            PluginLog.Information(_lastErrorMessage);
+            LMeterLogger.Logger?.Info(_lastErrorMessage);
             _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
-            PluginLog.Verbose(_lastErrorMessage);
+            LMeterLogger.Logger?.Verbose(_lastErrorMessage);
             return false;
         }
         _status = SubscriptionStatus.Subscribing;
@@ -206,22 +205,22 @@ public class IinactCactbotClient : IActClient
         try
         {
             // no way to check this, hoping blindly that it always works ¯\_(ツ)_/¯
-            PluginLog.Verbose($"""CACTBOT | Updating subscription using endpoint: `{IinactProviderEditEndpoint}`""");
+            LMeterLogger.Logger?.Verbose($"""CACTBOT | Updating subscription using endpoint: `{IinactProviderEditEndpoint}`""");
             _dpi
                 .GetIpcSubscriber<JObject, bool>(IinactProviderEditEndpoint)
                 .InvokeAction(SubscriptionMessageObject);
-            PluginLog.Verbose($"""CACTBOT | Subscription update message sent""");
+            LMeterLogger.Logger?.Verbose($"""CACTBOT | Subscription update message sent""");
             _status = SubscriptionStatus.Subscribed;
-            PluginLog.Information("CACTBOT | Successfully subscribed to combat events from IINACT IPC");
+            LMeterLogger.Logger?.Info("CACTBOT | Successfully subscribed to combat events from IINACT IPC");
             return true;
         }
         catch (Exception ex)
         {
             _status = SubscriptionStatus.ConnectionFailed;
             _lastErrorMessage = "CACTBOT | Failed to finalize IINACT subscription!";
-            PluginLog.Information(_lastErrorMessage);
+            LMeterLogger.Logger?.Info(_lastErrorMessage);
             _lastErrorMessage = _lastErrorMessage + "\n\n" + ex;
-            PluginLog.Verbose(_lastErrorMessage);
+            LMeterLogger.Logger?.Verbose(_lastErrorMessage);
             return false;
         }
     }
@@ -230,12 +229,12 @@ public class IinactCactbotClient : IActClient
     {
         if (_status != SubscriptionStatus.NotConnected)
         {
-            PluginLog.Error("CACTBOT | Cannot start, IINACTCactbotClient already setup!");
+            LMeterLogger.Logger?.Error("CACTBOT | Cannot start, IINACTCactbotClient already setup!");
             return;
         }
         else if (!_bypassWebSocket)
         {
-            PluginLog.Information("CACTBOT | Bypass WebSocket disabled by config");
+            LMeterLogger.Logger?.Info("CACTBOT | Bypass WebSocket disabled by config");
             return;
         }
 
@@ -258,7 +257,10 @@ public class IinactCactbotClient : IActClient
                         e is SocketException
                     )
                     {
-                        PluginLog.Log($"CACTBOT | Connection attempt #{i} failed, trying again after a delay...");
+                        LMeterLogger.Logger?.Info
+                        (
+                            $"CACTBOT | Connection attempt #{i} failed, trying again after a delay..."
+                        );
                         Task.Delay(1000, _cancelTokenSource.Token).GetAwaiter().GetResult();
                     }
                 }
@@ -268,7 +270,7 @@ public class IinactCactbotClient : IActClient
                 var (locId, locName) = CharacterState.GetCharacterLocation();
                 if (locId == 0 || locName == null)
                 {
-                    PluginLog.Error("CACTBOT | Failed to get current player location");
+                    LMeterLogger.Logger?.Error("CACTBOT | Failed to get current player location");
                     _status = SubscriptionStatus.ConnectionFailed;
                     _fakeHandshakeComplete = false;
                     return;
@@ -281,7 +283,7 @@ public class IinactCactbotClient : IActClient
                     """
                 );
                 SendHttpPostRequest(RseqMessage2);
-                PluginLog.Log("CACTBOT | Fake Handshake Complete");
+                LMeterLogger.Logger?.Info("CACTBOT | Fake Handshake Complete");
             }
             catch (Exception e) when
             (
@@ -291,7 +293,7 @@ public class IinactCactbotClient : IActClient
                 e is SocketException
             )
             {
-                PluginLog.Error("CACTBOT | Fake Handshake Failed");
+                LMeterLogger.Logger?.Error("CACTBOT | Fake Handshake Failed");
                 _fakeHandshakeComplete = false;
                 return;
             }
@@ -311,7 +313,7 @@ public class IinactCactbotClient : IActClient
                 .GetIpcSubscriber<string, bool>(IinactUnsubscribeIpcEndpoint)
                 .InvokeFunc(LMeterCactbotSubscriptionIpcEndpoint);
 
-            PluginLog.Information(
+            LMeterLogger.Logger?.Info(
                 success
                     ? "CACTBOT | Successfully unsubscribed from IINACT IPC"
                     : "CACTBOT | Failed to unsubscribe from IINACT IPC"
