@@ -14,7 +14,7 @@ https://github.com/joshua-software-dev/LMeter/assets/55586380/fbeab6eb-ac30-43e0
 
 LMeter can optionally show alerts in chat
 
-![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/cactbot_preview_positioning.png)
+![](https://gitlab.com/joshua.software.dev/LMeter/-/raw/master/repo/cactbot_preview_positioning.png)
 A preview for the positioning of LMeter's integrated Cactbot Timeline Events / Alerts (both are separately user configurable)
 
 ## Why add Cactbot integration?
@@ -47,19 +47,19 @@ Also likely not possible to fix. I could maybe rewrite `TotallyNotCef` in a fast
 
 ## How do I enable and use this feature?
 
-![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/dalamud_settings_part1.png)
+![](https://gitlab.com/joshua.software.dev/LMeter/-/raw/master/repo/dalamud_settings_part1.png)
 
 The first thing to do is to ensure you've added the LMeter `repo.json` url to your Custom Plugin Repositories in your Dalamud Settings.
 
-![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/dalamud_settings_part2.png)
+![](https://gitlab.com/joshua.software.dev/LMeter/-/raw/master/repo/dalamud_settings_part2.png)
 
 As of the time of writing, the Cactbot integration is only in the testing builds. You can enable receiving testing builds in Dalamud Settings.
 
-![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/cactbot_browser_settings.png)
+![](https://gitlab.com/joshua.software.dev/LMeter/-/raw/master/repo/cactbot_browser_settings.png)
 
-After doing both these steps and installing LMeter, open LMeter's settings menu, and go to the Cactbot tab. The browser is not automatically started because starting a subprocess on your computer without your permission is rude. The first time you wish to start it, you must click the `Start Web Browser` button, and then LMeter will automatically download the required web browser application, [TotallyNotCef](https://github.com/joshua-software-dev/TotallyNotCef). Every time after the first, the browser can be launched for you if you enable `Automatically Start Background Web Browser`, or you can also choose to do so manually each time, at your discretion. Whenever the `TotallyNotCef` is started, LMeter will first check for updates to `TotallyNotCef`, and if the default install location of `TotallyNotCef` is used, LMeter will update it for you.
+After doing both these steps and installing LMeter, open LMeter's settings menu, and go to the Cactbot tab. The browser is not automatically started because starting a subprocess on your computer without your permission is rude. The first time you wish to start it, you must click the `Start Web Browser` button, and then LMeter will automatically download the required web browser application, [TotallyNotCef](https://gitlab.com/joshua.software.dev/TotallyNotCef). Every time after the first, the browser can be launched for you if you enable `Automatically Start Background Web Browser`, or you can also choose to do so manually each time, at your discretion. Whenever the `TotallyNotCef` is started, LMeter will first check for updates to `TotallyNotCef`, and if the default install location of `TotallyNotCef` is used, LMeter will update it for you.
 
-![](https://github.com/joshua-software-dev/LMeter/blob/master/repo/cactbot_connection_settings.png)
+![](https://gitlab.com/joshua.software.dev/LMeter/-/raw/master/repo/cactbot_connection_settings.png)
 
 After starting the browser, you need to enable connecting to it. This can be done with the `Enable Connection to Browser` toggle in the `Connection Settings` submenu of the Cactbot tab. From here, it is likely the feature will: "Just Work (tm)", however, if you are running other services on your computer, you may need to change the `HTTP Server Port` option. This setting changes what port `TotallyNotCef` hosts the Cactbot text content from. It is not likely you need to change this unless something else you are running is using port 8080.
 
@@ -75,7 +75,7 @@ How fast the background browser is polled for these updates can be changed by th
 
 * The background web browser isn't starting / no Cactbot information ever renders
 
-It is possible for the background web browser to fail to start depending on your hardware / software configuration. This problem occurs notably often for some wine distributions, such as proton or when running under flatpak. If for whatever reason `TotallyNotCef` fails to start reliably under wine for you, there is also a linux native version of `TotallyNotCef` available for download [here](https://github.com/joshua-software-dev/TotallyNotCef/releases). When you are running the linux native version ahead of time / in the background, you should only need to toggle `Enable Connection to Browser` on in the `Connection Settings` submenu, and disable `Automatically Start Background Web Browser` in the `Web Browser Settings` submenu for the feature to work. Whenever the plugin is unloaded cleanly (ex. When shutting down the game, updating, etc.), it will send a command to the background web browser to stop, so you will need to relaunch it when this happens.
+It is possible for the background web browser to fail to start depending on your hardware / software configuration. This problem occurs notably often for some wine distributions, such as proton or when running under flatpak. If for whatever reason `TotallyNotCef` fails to start reliably under wine for you, there is also a linux native version of `TotallyNotCef` available for download [here](https://gitlab.com/joshua.software.dev/TotallyNotCef/-/releases). When you are running the linux native version ahead of time / in the background, you should only need to toggle `Enable Connection to Browser` on in the `Connection Settings` submenu, and disable `Automatically Start Background Web Browser` in the `Web Browser Settings` submenu for the feature to work. Whenever the plugin is unloaded cleanly (ex. When shutting down the game, updating, etc.), it will send a command to the background web browser to stop, so you will need to relaunch it when this happens.
 
 For the `..._selfcontained.zip` releases, a stripped down version of the .NET runtime is included with the application, allowing it to run without installing any dependencies. However, this does make the total size on disk of the install larger, and if you have .NET 7+ installed at a system level, you likely only need the regular `...linux.zip` releases. If you don't know what that means, or are running a locked down linux release like SteamOS on the Steam Deck, the `..._selfcontained.zip` release is the one you should download.
 
