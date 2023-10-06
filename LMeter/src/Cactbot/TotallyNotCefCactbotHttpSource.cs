@@ -449,7 +449,7 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
     {
         if (autoStartBackgroundWebBrowser)
         {
-            // await StartTotallyNotCefProcess();
+            await StartTotallyNotCefProcess();
         }
 
         LastHealthResponse = await CheckIfPortBelongsToTotallyNotCef();

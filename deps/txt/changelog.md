@@ -1,3 +1,12 @@
+# Version 0.2.1.1
+- Fix Job based UI rules failing to read the correct jobs
+- Reenable Cactbot support in all builds. Note: The default build of wine used
+  by XIVLauncher.Core causes TotallyNotCef to hang. Consider alternative wine
+  builds, such as those from https://github.com/rankynbass/wine-ge-xiv/releases
+  or using a Linux native build of TotallyNotCef. More info on how to set that
+  up can be found here:
+  https://gitlab.com/joshua.software.dev/LMeter/-/blob/master/Cactbot.md
+
 # Version 0.2.1.0
 - Update for patch 6.5
 - Cactbot support in non-beta builds

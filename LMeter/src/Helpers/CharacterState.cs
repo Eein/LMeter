@@ -57,7 +57,7 @@ public static class CharacterState
         var player = PluginManager.Instance.ClientState.LocalPlayer;
         if (player is null) return Job.UKN;
 
-        return (Job) (player.ClassJob.GameData?.JobIndex ?? 0);
+        return (Job) (player.ClassJob?.Id ?? 0);
     }
 
     public static (ushort territoryId, string? territoryName) GetCharacterLocation()

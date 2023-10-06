@@ -4,9 +4,9 @@
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data. Now with Cactbot integration!",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.1.0",
-        "TestingAssemblyVersion": "0.2.1.0",
-        "RepoUrl": "https://github.com/joshua-software-dev/LMeter",
+        "AssemblyVersion": "0.2.1.1",
+        "TestingAssemblyVersion": "0.2.1.1",
+        "RepoUrl": "https://gitlab.com/joshua.software.dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 9,
         "IsHide": "False",
@@ -18,6 +18,6 @@
         "DownloadLinkTesting": "https://gitlab.com/joshua.software.dev/LMeter/-/package_files/96636771/download",
         "DownloadLinkUpdate": "https://gitlab.com/joshua.software.dev/LMeter/-/package_files/96636771/download",
         "IconUrl": "https://gitlab.com/joshua.software.dev/LMeter/-/raw/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.1.0\n- Update for patch 6.5\n- Cactbot support in non-beta builds\n- Cactbot support is currently only possible when running on wine with the\n  linux native builds of TotallyNotCef. Sorry for the inconvenience, this will\n  hopefully be fixed by the next release\n- Add the Sylphstep gold saucer jumping puzzle to the gold saucer exclude zones"
+        "Changelog": "# Version 0.2.1.1\n- Fix Job based UI rules failing to read the correct jobs\n- Reenable Cactbot support in all builds. Note: The default build of wine used\n  by XIVLauncher.Core causes TotallyNotCef to hang. Consider alternative wine\n  builds, such as those from https://github.com/rankynbass/wine-ge-xiv/releases\n  or using a Linux native build of TotallyNotCef. More info on how to set that\n  up can be found here:\n  https://gitlab.com/joshua.software.dev/LMeter/-/blob/master/Cactbot.md"
     }
 ]
