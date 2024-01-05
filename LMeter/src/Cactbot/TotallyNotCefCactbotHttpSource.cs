@@ -390,7 +390,16 @@ public class TotallyNotCefCactbotHttpSource : IDisposable
 
             using var streamToReadFrom = await download_response.Content.ReadAsStreamAsync(_cancelTokenSource.Token);
             using var zip = new ZipArchive(streamToReadFrom);
-            zip.ExtractToDirectory(extractDir);
+            try
+            {
+                zip.ExtractToDirectory(extractDir);
+            }
+            catch (Exception e)
+            {
+                LMeterLogger.Logger?.Error("Failed to extract TotallyNotCef: " + e);
+                return;
+            }
+
             LMeterLogger.Logger?.Info("Finished extracting TotallyNotCef");
         }
         catch (Exception e) when

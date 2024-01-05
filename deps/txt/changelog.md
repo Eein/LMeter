@@ -1,3 +1,7 @@
+# Version 0.2.1.2
+- Fix rare crash when extracting TotallyNotCef during first install or plugin
+  update
+
 # Version 0.2.1.1
 - Fix Job based UI rules failing to read the correct jobs
 - Reenable Cactbot support in all builds. Note: The default build of wine used

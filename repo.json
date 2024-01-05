@@ -4,8 +4,8 @@
         "Name": "LMeter",
         "Description": "Plugin to display ACT combat log data. Now with Cactbot integration!",
         "InternalName": "LMeter",
-        "AssemblyVersion": "0.2.1.1",
-        "TestingAssemblyVersion": "0.2.1.1",
+        "AssemblyVersion": "0.2.1.2",
+        "TestingAssemblyVersion": "0.2.1.2",
         "RepoUrl": "https://gitlab.com/joshua.software.dev/LMeter",
         "ApplicableVersion": "any",
         "DalamudApiLevel": 9,
@@ -14,10 +14,10 @@
         "DownloadCount": 0,
         "LastUpdate": 0,
         "LoadPriority": 69420,
-        "DownloadLinkInstall": "https://gitlab.com/joshua.software.dev/LMeter/-/package_files/96663696/download",
-        "DownloadLinkTesting": "https://gitlab.com/joshua.software.dev/LMeter/-/package_files/96663696/download",
-        "DownloadLinkUpdate": "https://gitlab.com/joshua.software.dev/LMeter/-/package_files/96663696/download",
+        "DownloadLinkInstall": "https://gitlab.com/joshua.software.dev/LMeter/-/package_files/108121145/download",
+        "DownloadLinkTesting": "https://gitlab.com/joshua.software.dev/LMeter/-/package_files/108121145/download",
+        "DownloadLinkUpdate": "https://gitlab.com/joshua.software.dev/LMeter/-/package_files/108121145/download",
         "IconUrl": "https://gitlab.com/joshua.software.dev/LMeter/-/raw/master/deps/img/icon.png",
-        "Changelog": "# Version 0.2.1.1\n- Fix Job based UI rules failing to read the correct jobs\n- Reenable Cactbot support in all builds. Note: The default build of wine used\n  by XIVLauncher.Core causes TotallyNotCef to hang. Consider alternative wine\n  builds, such as those from https://github.com/rankynbass/wine-ge-xiv/releases\n  or using a Linux native build of TotallyNotCef. More info on how to set that\n  up can be found here:\n  https://gitlab.com/joshua.software.dev/LMeter/-/blob/master/Cactbot.md"
+        "Changelog": "# Version 0.2.1.2\n- Fix rare crash when extracting TotallyNotCef during first install or plugin\n  update"
     }
 ]
